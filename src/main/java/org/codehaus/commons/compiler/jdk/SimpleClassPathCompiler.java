@@ -8,11 +8,13 @@ import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class SimpleClassPathCompiler extends SimpleCompiler {
 
     private List<URL> classpathUrls;
+    private List<String> compilerOptions;
 
     public SimpleClassPathCompiler(List<URL> classpathUrls) {
         this(new URLClassLoader(classpathUrls.toArray(new URL[classpathUrls.size()]),
@@ -23,6 +25,12 @@ public class SimpleClassPathCompiler extends SimpleCompiler {
     public SimpleClassPathCompiler(ClassLoader parentClassLoader, List<URL> classpathUrls) {
         super(parentClassLoader);
         this.classpathUrls = classpathUrls;
+    }
+
+    public void setCompilerOptions(String... compilerOptions) {
+        if(compilerOptions!=null && compilerOptions.length>0){
+            this.compilerOptions = Arrays.asList(compilerOptions);
+        }
     }
 
     @Override
@@ -39,6 +47,9 @@ public class SimpleClassPathCompiler extends SimpleCompiler {
             classPathBuilder.append(url.getFile());
         }
         newOpts.add(classPathBuilder.toString());
+        if(compilerOptions!=null && !compilerOptions.isEmpty()){
+            newOpts.addAll(compilerOptions);
+        }
         return newOpts;
     }
 

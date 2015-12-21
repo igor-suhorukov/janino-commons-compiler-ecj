@@ -471,7 +471,7 @@ public class EclipseCompilerImpl extends Main {
             fileSystemClasspaths.addAll(this.handleBootclasspath(null, null));
             fileSystemClasspaths.addAll(this.handleClasspath(null, null));
         }
-        if(classpaths!=null && classpaths.size()>0){
+        if(classpaths!=null && !classpaths.isEmpty()){
             for(Object cp: classpaths){
                 for(String path: ((String) cp).split(File.pathSeparator)) {
                     FileSystem.Classpath currentClasspath = FileSystem.getClasspath(path, customEncoding, null);
