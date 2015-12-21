@@ -10,6 +10,14 @@ import java.util.ServiceLoader;
 public class CompilerUtil {
 
     public synchronized static JavaCompiler getJavaCompiler(){
+        if(!Boolean.getBoolean("skipJavaCompilerService")){
+            JavaCompiler javaCompiler = getJavaCompilerService();
+            if (javaCompiler != null) return javaCompiler;
+        }
+        return ToolProvider.getSystemJavaCompiler();
+    }
+
+    private static JavaCompiler getJavaCompilerService() {
         try {
             ServiceLoader<JavaCompiler> javaCompilers = ServiceLoader.load(JavaCompiler.class);
             for (JavaCompiler javaCompiler : javaCompilers) {
@@ -18,6 +26,6 @@ public class CompilerUtil {
         } catch (Exception ignored) {
             //ignore exception
         }
-        return ToolProvider.getSystemJavaCompiler();
+        return null;
     }
 }

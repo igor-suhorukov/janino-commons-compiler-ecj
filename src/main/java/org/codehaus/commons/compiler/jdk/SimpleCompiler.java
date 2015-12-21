@@ -43,7 +43,6 @@ import org.codehaus.commons.compiler.Location;
 import org.codehaus.commons.compiler.WarningHandler;
 
 /** The JDK-based implementation of {@link ISimpleCompiler}. */
-public
 class SimpleCompiler extends Cookable implements ISimpleCompiler {
 
     protected ClassLoader    parentClassLoader;
