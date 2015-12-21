@@ -40,13 +40,17 @@ public
 class JavaFileManagerClassLoader extends ClassLoader {
 
     private final JavaFileManager javaFileManager;
+    private final ClassLoader parentClassloader;
 
     public
-    JavaFileManagerClassLoader(JavaFileManager javaFileManager) { this.javaFileManager = javaFileManager; }
+    JavaFileManagerClassLoader(JavaFileManager javaFileManager) {
+        this(javaFileManager, Thread.currentThread().getContextClassLoader());
+    }
 
     public
     JavaFileManagerClassLoader(JavaFileManager javaFileManager, ClassLoader parentClassLoader) {
         super(parentClassLoader);
+        this.parentClassloader = parentClassLoader;
         this.javaFileManager = javaFileManager;
     }
 
@@ -58,8 +62,9 @@ class JavaFileManagerClassLoader extends ClassLoader {
             if(classFile==null){
                 classFile = getJavaFileForInput(className.replace(".","/"));
             }
-            if (classFile == null) throw new ClassNotFoundException(className);
-
+            if(classFile==null) {
+                return parentClassloader.loadClass(className);
+            }
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             {
                 InputStream is = classFile.openInputStream();

@@ -32,14 +32,8 @@ import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.List;
 
-import javax.tools.Diagnostic;
-import javax.tools.DiagnosticListener;
-import javax.tools.ForwardingJavaFileManager;
-import javax.tools.JavaCompiler;
-import javax.tools.JavaFileManager;
-import javax.tools.JavaFileObject;
+import javax.tools.*;
 import javax.tools.JavaFileObject.Kind;
-import javax.tools.SimpleJavaFileObject;
 
 import org.codehaus.commons.compiler.CompileException;
 import org.codehaus.commons.compiler.Cookable;
@@ -52,13 +46,21 @@ import org.codehaus.commons.compiler.WarningHandler;
 public
 class SimpleCompiler extends Cookable implements ISimpleCompiler {
 
-    protected ClassLoader    parentClassLoader = Thread.currentThread().getContextClassLoader();
+    protected ClassLoader    parentClassLoader;
     protected ClassLoader    result;
     protected boolean        debugSource;
     protected boolean        debugLines;
     protected boolean        debugVars;
     protected ErrorHandler   optionalCompileErrorHandler;
     protected WarningHandler optionalWarningHandler;
+
+    public SimpleCompiler() {
+        this(Thread.currentThread().getContextClassLoader());
+    }
+
+    public SimpleCompiler(ClassLoader parentClassLoader) {
+        this.parentClassLoader = parentClassLoader;
+    }
 
     @Override public ClassLoader
     getClassLoader() { this.assertCooked(); return this.result; }
@@ -106,7 +108,7 @@ class SimpleCompiler extends Cookable implements ISimpleCompiler {
 
         // Get the original FM, which reads class files through this JVM's BOOTCLASSPATH and
         // CLASSPATH.
-        final JavaFileManager fm = compiler.getStandardFileManager(null, null, null);
+        final StandardJavaFileManager fm = getStandardFileManager(compiler);
 
         // Wrap it so that the output files (in our case class files) are stored in memory rather
         // than in files.
@@ -190,6 +192,10 @@ class SimpleCompiler extends Cookable implements ISimpleCompiler {
         this.result = getJavaFileClassLoader(fileManager, this.parentClassLoader);
     }
 
+    protected StandardJavaFileManager getStandardFileManager(JavaCompiler compiler) {
+        return compiler.getStandardFileManager(null, null, null);
+    }
+
     protected JavaCompiler getJavaCompiler() {
         return CompilerUtil.getJavaCompiler();
     }
@@ -211,14 +217,6 @@ class SimpleCompiler extends Cookable implements ISimpleCompiler {
     }
 
     protected JavaFileManagerClassLoader getJavaFileClassLoader(final JavaFileManager fileManager, final ClassLoader parentClassLoader) {
-/*
-        return AccessController.doPrivileged(new PrivilegedAction<JavaFileManagerClassLoader>() {
-
-            @Override public JavaFileManagerClassLoader
-            run() {
-                return new JavaFileManagerClassLoader(fileManager, parentClassLoader); }
-        });
-*/
         return new JavaFileManagerClassLoader(fileManager, parentClassLoader);
     }
 
