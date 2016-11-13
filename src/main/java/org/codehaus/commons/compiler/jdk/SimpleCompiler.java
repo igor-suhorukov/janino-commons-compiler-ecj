@@ -26,21 +26,20 @@
 
 package org.codehaus.commons.compiler.jdk;
 
-import java.io.*;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Collections;
-import java.util.List;
+import org.codehaus.commons.compiler.*;
 
 import javax.tools.*;
 import javax.tools.JavaFileObject.Kind;
-
-import org.codehaus.commons.compiler.CompileException;
-import org.codehaus.commons.compiler.Cookable;
-import org.codehaus.commons.compiler.ErrorHandler;
-import org.codehaus.commons.compiler.ISimpleCompiler;
-import org.codehaus.commons.compiler.Location;
-import org.codehaus.commons.compiler.WarningHandler;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /** The JDK-based implementation of {@link ISimpleCompiler}. */
 class SimpleCompiler extends Cookable implements ISimpleCompiler {
@@ -52,6 +51,7 @@ class SimpleCompiler extends Cookable implements ISimpleCompiler {
     protected boolean        debugVars;
     protected ErrorHandler   optionalCompileErrorHandler;
     protected WarningHandler optionalWarningHandler;
+    protected JavaFileManager fileManager;
 
     public SimpleCompiler() {
         this(Thread.currentThread().getContextClassLoader());
@@ -187,8 +187,31 @@ class SimpleCompiler extends Cookable implements ISimpleCompiler {
             }
             throw rte;
         }
+        this.fileManager = fileManager;
         // Create a ClassLoader that reads class files from our FM.
         this.result = getJavaFileClassLoader(fileManager, this.parentClassLoader);
+    }
+
+    public Set<String> listCompiledClasses() throws IOException {
+        Iterable<JavaFileObject> classList = getCompiledJavaFileObjects();
+
+        Set<String> compilledClasses = new HashSet<String>();
+        for(JavaFileObject javaFileObject: classList){
+            String objectPath = javaFileObject.getName();
+            String substring = objectPath.substring(objectPath.indexOf('/')==0 ? 1:0,
+                                                    objectPath.lastIndexOf(".class")).replace('/','.');
+            compilledClasses.add(substring);
+        }
+        return compilledClasses;
+    }
+
+    public Iterable<JavaFileObject> getCompiledJavaFileObjects() throws IOException {
+        assertCooked();
+        return fileManager.list(
+                StandardLocation.CLASS_OUTPUT,
+                "",
+                Collections.singleton(Kind.CLASS),
+                false);
     }
 
     protected StandardJavaFileManager getStandardFileManager(JavaCompiler compiler) {
